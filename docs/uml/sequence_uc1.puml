@@ -1,0 +1,32 @@
+@startuml sequence_uc1
+title UC1 Prendre un ticket - Diagramme de séquence (scénario nominal et conflit)
+skinparam shadowing false
+autonumber
+
+actor Client
+participant "TicketController" as Ctrl
+participant "TicketService" as Svc
+participant "TicketRepository" as Repo
+database "Base SQLite" as DB
+
+Client -> Ctrl : POST /tickets (bureau, service, téléphone)
+Ctrl -> Svc : take_ticket(bureau, service, téléphone)
+Svc -> Svc : valider service et téléphone
+Svc -> Repo : create_with_next_number(...)
+Repo -> DB : BEGIN IMMEDIATE (verrou d'écriture)
+Repo -> DB : SELECT MAX(number) + 1
+Repo -> DB : INSERT ticket (contrainte UNIQUE)
+alt insertion réussie
+  Repo -> DB : COMMIT
+  Repo --> Svc : Ticket (numéro attribué)
+  Svc -> Repo : count_waiting_up_to(numéro)
+  Repo --> Svc : position
+  Svc --> Ctrl : TicketResult
+  Ctrl --> Client : 201 Created (numéro, position)
+else client a déjà un ticket en attente
+  Repo -> DB : ROLLBACK
+  Repo --> Svc : ActiveTicketExists
+  Svc --> Ctrl : ActiveTicketExists
+  Ctrl --> Client : 409 Conflict
+end
+@enduml
