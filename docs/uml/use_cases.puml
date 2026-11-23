@@ -1,0 +1,34 @@
+@startuml use_cases
+title Dawri - Diagramme de cas d'utilisation
+left to right direction
+skinparam shadowing false
+
+actor "Client" as C
+actor "Agent de guichet" as A
+actor "Responsable de bureau" as R
+actor "Service de notification\n(SMS / push)" as N <<système>>
+
+rectangle "Dawri" {
+  usecase "UC1 Prendre un ticket virtuel" as UC1
+  usecase "UC2 Suivre sa position\net son attente estimée" as UC2
+  usecase "UC3 Être notifié quand\nson tour approche" as UC3
+  usecase "UC4 Appeler le client suivant" as UC4
+  usecase "UC5 Annuler ou reporter\nson ticket" as UC5
+  usecase "UC6 Consulter les statistiques\nd'affluence" as UC6
+}
+
+C --> UC1
+C --> UC2
+C --> UC3
+C --> UC5
+A --> UC4
+R --> UC6
+UC3 --> N
+UC4 ..> UC3 : <<include>>
+
+note bottom of UC1
+  UC à risque :
+  plusieurs clients simultanés,
+  numéros uniques obligatoires
+end note
+@enduml
