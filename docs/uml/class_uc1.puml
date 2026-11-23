@@ -1,0 +1,63 @@
+@startuml class_uc1
+title UC1 Prendre un ticket - Diagramme de classes
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+
+package "Présentation" {
+  class TicketController {
+    +take_ticket(request: TicketRequest): TicketResponse
+  }
+  class TicketRequest {
+    +bureau_id: str
+    +service_code: str
+    +client_phone: str
+  }
+  class TicketResponse {
+    +id: int
+    +number: int
+    +position: int
+    +status: str
+  }
+}
+
+package "Métier" {
+  class TicketService {
+    +take_ticket(bureau_id, service_code, client_phone): TicketResult
+  }
+  class TicketResult {
+    +ticket: Ticket
+    +position: int
+  }
+  class Ticket {
+    +id: int
+    +bureau_id: str
+    +service_code: str
+    +day: str
+    +number: int
+    +client_phone: str
+    +status: str
+    +created_at: str
+  }
+  class InvalidRequest <<exception>>
+  class ActiveTicketExists <<exception>>
+}
+
+package "Accès aux données" {
+  class TicketRepository {
+    +create_with_next_number(bureau_id, service_code, day, client_phone, created_at): Ticket
+    +count_waiting_up_to(bureau_id, service_code, day, number): int
+  }
+}
+
+class "Table ticket (SQLite)" as DB <<base de données>>
+
+TicketController ..> TicketRequest
+TicketController ..> TicketResponse
+TicketController --> TicketService
+TicketService --> TicketRepository
+TicketService ..> TicketResult
+TicketResult o-- Ticket
+TicketService ..> InvalidRequest : lève
+TicketRepository ..> ActiveTicketExists : lève
+TicketRepository --> DB
+@enduml
